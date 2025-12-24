@@ -65,32 +65,65 @@ class ApiService {
     String? search,
     int page = 1,
   }) async {
-    var url = '${baseUrl}api/tickets/?page=$page';
-    if (status != null) url += '&status=$status';
-    if (priority != null) url += '&priority=$priority';
-    if (search != null && search.isNotEmpty) url += '&search=$search';
+    try {
+      var url = '${baseUrl}api/tickets/?page=$page';
+      if (status != null) url += '&status=$status';
+      if (priority != null) url += '&priority=$priority';
+      if (search != null && search.isNotEmpty) url += '&search=$search';
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: _getHeaders(),
-    );
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _getHeaders(),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final tickets = (data['results'] as List)
-          .map((json) => Ticket.fromJson(json))
-          .toList();
-      return {
-        'success': true,
-        'tickets': tickets,
-        'count': data['count'],
-        'next': data['next'],
-        'previous': data['previous'],
-      };
-    } else {
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        List<Ticket> tickets;
+        int count;
+        dynamic next;
+        dynamic previous;
+        
+        // La API puede devolver un array directo o un objeto con 'results'
+        if (data is List) {
+          // Array directo
+          tickets = data.map((json) => Ticket.fromJson(json)).toList();
+          count = tickets.length;
+          next = null;
+          previous = null;
+        } else if (data is Map<String, dynamic> && data.containsKey('results')) {
+          // Objeto con results (paginado)
+          tickets = (data['results'] as List)
+              .map((json) => Ticket.fromJson(json))
+              .toList();
+          count = data['count'] ?? tickets.length;
+          next = data['next'];
+          previous = data['previous'];
+        } else {
+          return {
+            'success': false,
+            'message': 'Formato de respuesta inválido',
+          };
+        }
+        
+        return {
+          'success': true,
+          'tickets': tickets,
+          'count': count,
+          'next': next,
+          'previous': previous,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Error al cargar tickets: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('Error en getTickets: $e');
       return {
         'success': false,
-        'message': 'Error al cargar tickets',
+        'message': 'Error de conexión: $e',
       };
     }
   }
@@ -126,36 +159,50 @@ class ApiService {
     int? companyId,
     int? projectId,
   }) async {
-    final url = Uri.parse('${baseUrl}api/tickets/');
-    final body = {
-      'title': title,
-      'description': description,
-      'priority': priority,
-      'ticket_type': ticketType,
-    };
-
-    if (hours != null) body['hours'] = hours;
-    if (categoryId != null) body['category_id'] = categoryId;
-    if (companyId != null) body['company_id'] = companyId;
-    if (projectId != null) body['project_id'] = projectId;
-
-    final response = await http.post(
-      url,
-      headers: _getHeaders(),
-      body: jsonEncode(body),
-    );
-
-    if (response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      return {
-        'success': true,
-        'ticket': Ticket.fromJson(data),
-        'message': 'Ticket creado exitosamente',
+    try {
+      final url = Uri.parse('${baseUrl}api/tickets/');
+      final body = <String, dynamic>{
+        'title': title,
+        'description': description,
+        'priority': priority,
+        'ticket_type': ticketType,
       };
-    } else {
+
+      if (hours != null) body['hours'] = hours;
+      if (categoryId != null) body['category_id'] = categoryId;
+      if (companyId != null) body['company_id'] = companyId;
+      if (projectId != null) body['project_id'] = projectId;
+
+      print('Creating ticket with body: $body');
+      
+      final response = await http.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(body),
+      );
+
+      print('Create ticket response status: ${response.statusCode}');
+      print('Create ticket response body: ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // El ticket se creó exitosamente
+        // La API no devuelve el ticket completo, así que solo retornamos éxito
+        return {
+          'success': true,
+          'message': 'Ticket creado exitosamente',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Error al crear el ticket: ${response.statusCode} - ${response.body}',
+        };
+      }
+    } catch (e, stackTrace) {
+      print('Error en createTicket: $e');
+      print('StackTrace: $stackTrace');
       return {
         'success': false,
-        'message': 'Error al crear el ticket',
+        'message': 'Error al crear el ticket: $e',
       };
     }
   }
@@ -205,33 +252,52 @@ class ApiService {
 
   // Categorías
   Future<List<Category>> getCategories() async {
-    final url = Uri.parse('${baseUrl}api/categories/');
-    final response = await http.get(
-      url,
-      headers: _getHeaders(),
-    );
+    try {
+      final url = Uri.parse('${baseUrl}api/categories/');
+      final response = await http.get(
+        url,
+        headers: _getHeaders(),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as List;
-      return data.map((json) => Category.fromJson(json)).toList();
-    } else {
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // La API puede devolver un array directo o un objeto con 'results'
+        if (data is List) {
+          return data.map((json) => Category.fromJson(json)).toList();
+        } else if (data is Map && data.containsKey('results')) {
+          final results = data['results'] as List;
+          return results.map((json) => Category.fromJson(json)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error al cargar categorías: $e');
       return [];
     }
   }
 
   // Empresas
   Future<List<Company>> getCompanies() async {
-    final url = Uri.parse('${baseUrl}api/companies/');
-    final response = await http.get(
-      url,
-      headers: _getHeaders(),
-    );
+    try {
+      final url = Uri.parse('${baseUrl}api/companies/');
+      final response = await http.get(
+        url,
+        headers: _getHeaders(),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final results = data['results'] as List;
-      return results.map((json) => Company.fromJson(json)).toList();
-    } else {
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // La API puede devolver un array directo o un objeto con 'results'
+        if (data is List) {
+          return data.map((json) => Company.fromJson(json)).toList();
+        } else if (data is Map && data.containsKey('results')) {
+          final results = data['results'] as List;
+          return results.map((json) => Company.fromJson(json)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error al cargar empresas: $e');
       return [];
     }
   }

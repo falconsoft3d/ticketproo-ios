@@ -149,9 +149,9 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
           ),
-          PopupMenuButton(
+          PopupMenuButton<void>(
             icon: const Icon(Icons.more_vert),
-            itemBuilder: (context) => [
+            itemBuilder: (context) => <PopupMenuEntry<void>>[
               PopupMenuItem(
                 child: ListTile(
                   leading: const Icon(Icons.person),

@@ -62,6 +62,12 @@
       "languageVersion": "3.8"
     },
     {
+      "name": "flutter_app_badger",
+      "rootUri": "file:///Users/marlonfalcon/.pub-cache/hosted/pub.dev/flutter_app_badger-1.5.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "flutter_lints",
       "rootUri": "file:///Users/marlonfalcon/.pub-cache/hosted/pub.dev/flutter_lints-3.0.2",
       "packageUri": "lib/",

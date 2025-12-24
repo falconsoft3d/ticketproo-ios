@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 import '../models/ticket.dart';
 import '../models/category.dart';
 import '../models/company.dart';
@@ -59,6 +60,9 @@ class TicketProvider with ChangeNotifier {
       if (result['success']) {
         _tickets = result['tickets'];
         _totalCount = result['count'];
+        
+        // Actualizar el badge con el número de tickets abiertos
+        await _updateAppBadge();
       } else {
         _errorMessage = result['message'];
       }
@@ -68,6 +72,24 @@ class TicketProvider with ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> _updateAppBadge() async {
+    try {
+      // Contar tickets abiertos (open o in_progress)
+      final openTicketsCount = _tickets.where((ticket) => 
+        ticket.status == 'open' || ticket.status == 'in_progress'
+      ).length;
+      
+      if (openTicketsCount > 0) {
+        await FlutterAppBadger.updateBadgeCount(openTicketsCount);
+      } else {
+        await FlutterAppBadger.removeBadge();
+      }
+    } catch (e) {
+      // Si el dispositivo no soporta badges, ignorar el error
+      print('No se pudo actualizar el badge: $e');
+    }
   }
 
   Future<void> loadCategories(ApiService apiService) async {
@@ -143,6 +165,10 @@ class TicketProvider with ChangeNotifier {
     _errorMessage = null;
     _totalCount = 0;
     clearFilters();
+    
+    // Limpiar el badge cuando se cierra sesión
+    FlutterAppBadger.removeBadge();
+    
     notifyListeners();
   }
 }

@@ -14,12 +14,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _hoursController = TextEditingController();
   
   String _priority = 'medium';
-  String _ticketType = 'desarrollo';
   int? _selectedCategoryId;
-  int? _selectedCompanyId;
   bool _isLoading = false;
 
   @override
@@ -30,7 +27,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       final ticketProvider = Provider.of<TicketProvider>(context, listen: false);
       
       ticketProvider.loadCategories(authProvider.apiService);
-      ticketProvider.loadCompanies(authProvider.apiService);
     });
   }
 
@@ -38,7 +34,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _hoursController.dispose();
     super.dispose();
   }
 
@@ -50,20 +45,12 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final ticketProvider = Provider.of<TicketProvider>(context, listen: false);
 
-    double? hours;
-    if (_hoursController.text.isNotEmpty) {
-      hours = double.tryParse(_hoursController.text);
-    }
-
     final result = await ticketProvider.createTicket(
       authProvider.apiService,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       priority: _priority,
-      ticketType: _ticketType,
-      hours: hours,
       categoryId: _selectedCategoryId,
-      companyId: _selectedCompanyId,
     );
 
     setState(() => _isLoading = false);
@@ -192,80 +179,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                   if (value != null) {
                     setState(() => _priority = value);
                   }
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Tipo
-              DropdownButtonFormField<String>(
-                value: _ticketType,
-                decoration: InputDecoration(
-                  labelText: 'Tipo',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: const Icon(Icons.label),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'desarrollo', child: Text('Desarrollo')),
-                  DropdownMenuItem(value: 'error', child: Text('Error')),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _ticketType = value);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Empresa
-              DropdownButtonFormField<int>(
-                value: _selectedCompanyId,
-                decoration: InputDecoration(
-                  labelText: 'Empresa',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: const Icon(Icons.business),
-                ),
-                items: [
-                  const DropdownMenuItem(
-                    value: null,
-                    child: Text('Sin empresa'),
-                  ),
-                  ...ticketProvider.companies.map((company) {
-                    return DropdownMenuItem(
-                      value: company.id,
-                      child: Text(company.name),
-                    );
-                  }),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedCompanyId = value);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Horas estimadas
-              TextFormField(
-                controller: _hoursController,
-                decoration: InputDecoration(
-                  labelText: 'Horas estimadas',
-                  hintText: '0.0',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: const Icon(Icons.access_time),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    final hours = double.tryParse(value);
-                    if (hours == null || hours < 0) {
-                      return 'Ingresa un número válido';
-                    }
-                  }
-                  return null;
                 },
               ),
               const SizedBox(height: 32),

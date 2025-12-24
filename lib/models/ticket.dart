@@ -50,12 +50,12 @@ class Ticket {
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
       id: json['id'],
-      ticketNumber: json['ticket_number'],
-      title: json['title'],
+      ticketNumber: json['ticket_number'] ?? '',
+      title: json['title'] ?? '',
       description: json['description'],
-      priority: json['priority'],
-      status: json['status'],
-      ticketType: json['ticket_type'],
+      priority: json['priority'] ?? 'medium',
+      status: json['status'] ?? 'open',
+      ticketType: json['ticket_type'] ?? 'desarrollo',
       hours: json['hours']?.toDouble(),
       isApproved: json['is_approved'] ?? false,
       createdAt: DateTime.parse(json['created_at']),
@@ -64,7 +64,7 @@ class Ticket {
       assignedTo: json['assigned_to'] != null ? User.fromJson(json['assigned_to']) : null,
       category: json['category'] != null ? Category.fromJson(json['category']) : null,
       company: json['company'] != null ? Company.fromJson(json['company']) : null,
-      ageInHours: json['age_in_hours'],
+      ageInHours: json['age_in_hours'],  // Puede ser null
       ageDisplay: json['age_display'],
       priorityDisplay: json['priority_display'],
       statusDisplay: json['status_display'],
