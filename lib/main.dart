@@ -25,11 +25,26 @@ class TicketProoApp extends StatelessWidget {
         title: 'TicketProo',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF1E88E5),
+            primary: const Color(0xFF1E88E5),
+          ),
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
             elevation: 0,
             centerTitle: true,
+            backgroundColor: Color(0xFF1E88E5),
+            foregroundColor: Colors.white,
+          ),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            backgroundColor: Color(0xFF1E88E5),
+            foregroundColor: Colors.white,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E88E5),
+              foregroundColor: Colors.white,
+            ),
           ),
         ),
         initialRoute: '/',

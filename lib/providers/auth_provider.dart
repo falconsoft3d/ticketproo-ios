@@ -107,6 +107,8 @@ class AuthProvider with ChangeNotifier {
     await prefs.remove('email');
     await prefs.remove('firstName');
     await prefs.remove('lastName');
+    // No eliminamos saved_username, saved_password ni remember_me
+    // para que persistan después del logout
     
     notifyListeners();
   }

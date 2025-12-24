@@ -35,11 +35,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _loadSavedUsername() async {
     final prefs = await SharedPreferences.getInstance();
     final savedUsername = prefs.getString('saved_username');
+    final savedPassword = prefs.getString('saved_password');
     final rememberMe = prefs.getBool('remember_me') ?? false;
     
     if (savedUsername != null && rememberMe) {
       setState(() {
         _usernameController.text = savedUsername;
+        if (savedPassword != null) {
+          _passwordController.text = savedPassword;
+        }
         _rememberMe = true;
       });
     }
@@ -49,9 +53,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (_rememberMe) {
       await prefs.setString('saved_username', _usernameController.text.trim());
+      await prefs.setString('saved_password', _passwordController.text);
       await prefs.setBool('remember_me', true);
     } else {
       await prefs.remove('saved_username');
+      await prefs.remove('saved_password');
       await prefs.setBool('remember_me', false);
     }
   }
@@ -259,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               },
                             ),
-                            const Text('Recordar usuario'),
+                            const Text('Recordar credenciales'),
                           ],
                         ),
                         const SizedBox(height: 8),
